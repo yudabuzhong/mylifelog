@@ -20,15 +20,12 @@
 
     <!-- Custom Fonts -->
     <style>
+        /* Added VT323 for the authentic digital date stamp look */
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;900&family=Jura:wght@500;700&family=Press+Start+2P&family=Playfair+Display:ital,wght@1,600;1,900&family=Oswald:wght@500;700&family=VT323&display=swap');
 
         /* Base Transitions */
-        /* FIXED: Removed touch-action: none to allow scrolling */
-        body { transition: background 0.5s ease; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        body { transition: background 0.5s ease; touch-action: none; overflow-y: scroll; }
         
-        /* New utility to prevent scroll ONLY on draggable items */
-        .prevent-scroll { touch-action: none; }
-
         /* --- THEME: CUTE (Soft Pop / Y2K) --- */
         .theme-cute-bg { background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); }
         .theme-cute-panel {
@@ -159,6 +156,7 @@
         const Dice = (props) => <Icon {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></Icon>;
         const RefreshCcw = (props) => <Icon {...props}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></Icon>;
         const X = (props) => <Icon {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Icon>;
+        const Calendar = (props) => <Icon {...props}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></Icon>;
 
         // Data
         const STICKER_SETS = {
@@ -267,6 +265,7 @@
             const [isGenerating, setIsGenerating] = useState(false);
             const [activeSlot, setActiveSlot] = useState(null);
             const [activeStickerId, setActiveStickerId] = useState(null);
+            const [generatedImage, setGeneratedImage] = useState(null); // State for modal
             
             const frameRef = useRef(null);
             const batchInputRef = useRef(null);
@@ -464,10 +463,18 @@
                             backgroundColor: null,
                             useCORS: true 
                         });
+                        
+                        const dataUrl = canvas.toDataURL('image/png');
+                        
+                        // 1. Try automatic download (Works on PC/Android Chrome)
                         const link = document.createElement('a');
                         link.download = `lifelog_${theme}_${Date.now()}.png`;
-                        link.href = canvas.toDataURL('image/png');
+                        link.href = dataUrl;
                         link.click();
+
+                        // 2. SHOW MODAL for Mobile (Works on iOS/WeChat/All Mobile)
+                        setGeneratedImage(dataUrl);
+
                     } catch (err) {
                         alert("生成失败，请重试");
                         console.error(err);
@@ -535,6 +542,7 @@
                                                         }}
                                                         alt="uploaded"
                                                     />
+                                                    
                                                     {!isGenerating && (
                                                         <button 
                                                             onClick={(e) => { e.stopPropagation(); triggerSingleUpload(idx); }}
@@ -671,6 +679,30 @@
                             </div>
                         </div>
                     </div>
+
+                    {/* MOBILE PREVIEW MODAL */}
+                    {generatedImage && (
+                        <div 
+                            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-6 backdrop-blur-sm"
+                            onClick={() => setGeneratedImage(null)}
+                        >
+                            <div className="relative max-w-full max-h-[80vh] flex flex-col items-center gap-4 animate-popIn" onClick={e => e.stopPropagation()}>
+                                <img src={generatedImage} alt="Generated" className="rounded-lg shadow-2xl max-w-full max-h-[70vh] border-2 border-white/20" />
+                                
+                                <div className="text-white text-center">
+                                    <p className="font-bold text-lg mb-1 animate-pulse">✨ 图片已生成！</p>
+                                    <p className="text-sm opacity-70">请长按上方图片保存到相册</p>
+                                </div>
+
+                                <button 
+                                    onClick={() => setGeneratedImage(null)}
+                                    className="mt-2 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     <input type="file" multiple ref={batchInputRef} onChange={handleBatchUpload} accept="image/*" className="hidden-input" />
                     <input type="file" ref={singleInputRef} onChange={handleSingleUpload} accept="image/*" className="hidden-input" />
