@@ -51,6 +51,7 @@
             font-family: 'Fredoka', sans-serif;
             box-shadow: 4px 4px 10px rgba(166, 180, 200, 0.2), -4px -4px 10px rgba(255, 255, 255, 0.8);
             transition: all 0.2s;
+            cursor: pointer;
         }
         .theme-cute-btn:active { transform: scale(0.95); }
         .theme-cute-btn:hover { color: #ff9a9e; }
@@ -79,6 +80,7 @@
             letter-spacing: 1px;
             box-shadow: inset 1px 1px 0 rgba(255,255,255,0.1), 2px 2px 5px rgba(0,0,0,0.5);
             text-shadow: 0 -1px 0 rgba(0,0,0,0.8);
+            cursor: pointer;
         }
         .theme-fuji-btn:active { background: #222; transform: translateY(1px); }
         .fuji-frame-bg { background-color: #111; border: 8px solid #000; }
@@ -110,6 +112,7 @@
             text-transform: uppercase;
             font-weight: bold;
             transition: 0.1s;
+            cursor: pointer;
         }
         .theme-cyber-btn:hover { background: #32ff00; color: #000; box-shadow: 0 0 10px #32ff00; }
         .cyber-scanlines {
@@ -442,60 +445,65 @@
                 setCustomText(presets[Math.floor(Math.random() * presets.length)]);
             };
 
-            // --- SANDBOX CAPTURE STRATEGY ---
-            // Fixes distortion on mobile by rendering in a fixed, hidden, unscaled container
+            // --- GHOST CONTAINER CAPTURE STRATEGY (ULTIMATE FIX) ---
             const handleDownload = async () => {
                 if (!frameRef.current) return;
                 setIsGenerating(true);
                 setActiveSlot(null);
                 setActiveStickerId(null);
                 
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // Wait for Font
+                await document.fonts.ready;
+                // Wait for React UI cleanup
+                await new Promise(resolve => setTimeout(resolve, 150));
 
                 try {
-                    // 1. Create a Sandbox Container (Fixed, Visible to Browser, but Hidden from User)
-                    const sandbox = document.createElement('div');
-                    sandbox.style.position = 'fixed';
-                    sandbox.style.top = '0';
-                    sandbox.style.left = '0';
-                    sandbox.style.zIndex = '-9999'; // Behind everything
-                    sandbox.style.visibility = 'visible'; // Must be visible for rendering
-                    sandbox.style.opacity = '0'; // But transparent
-                    sandbox.style.overflow = 'hidden';
+                    // 1. Ghost Container: Fixed, Top 0, Visible but transparent
+                    // This tricks iOS into rendering it fully because it's "in viewport"
+                    const ghost = document.createElement('div');
+                    ghost.style.position = 'fixed';
+                    ghost.style.top = '0';
+                    ghost.style.left = '0';
+                    ghost.style.zIndex = '9999'; // On top of everything
+                    ghost.style.opacity = '0.01'; // Almost invisible but technically visible
+                    ghost.style.pointerEvents = 'none'; // Click-through
                     
-                    // 2. Set EXPLICIT PIXEL DIMENSIONS based on Layout
+                    // 2. Strict Dimensions
                     const targetWidth = layout === 'strip' ? 200 : 320;
                     const targetHeight = layout === 'strip' ? 800 : 400;
                     
-                    sandbox.style.width = `${targetWidth}px`;
-                    sandbox.style.height = `${targetHeight}px`;
+                    ghost.style.width = `${targetWidth}px`;
+                    ghost.style.height = `${targetHeight}px`;
                     
-                    // 3. Clone content into Sandbox
+                    // 3. Clone
                     const originalFrame = frameRef.current;
                     const clone = originalFrame.cloneNode(true);
                     
-                    // Reset clone styles to fit the sandbox 1:1
+                    // Reset clone styles
                     clone.style.width = '100%';
                     clone.style.height = '100%';
                     clone.style.transform = 'none'; 
                     clone.style.margin = '0';
-                    clone.style.boxShadow = 'none'; // Optional: remove shadow for clean cut
+                    clone.style.boxShadow = 'none';
                     
-                    sandbox.appendChild(clone);
-                    document.body.appendChild(sandbox);
+                    ghost.appendChild(clone);
+                    document.body.appendChild(ghost);
 
-                    // 4. Capture Sandbox
-                    const canvas = await html2canvas(sandbox, { 
+                    // 4. Wait for repaint (Crucial for iOS Safari blank image fix)
+                    await new Promise(r => setTimeout(r, 300));
+
+                    // 5. Capture
+                    const canvas = await html2canvas(clone, { 
                         width: targetWidth,
                         height: targetHeight,
-                        scale: 3, // High Res
+                        scale: 3, 
                         backgroundColor: null,
-                        useCORS: true,
+                        useCORS: true, // For cross-origin images
                         logging: false
                     });
                     
-                    // 5. Cleanup
-                    document.body.removeChild(sandbox);
+                    // 6. Cleanup
+                    document.body.removeChild(ghost);
                     
                     const dataUrl = canvas.toDataURL('image/png');
                     
@@ -505,6 +513,7 @@
                         link.href = dataUrl;
                         link.click();
                     }
+                    
                     setGeneratedImage(dataUrl);
 
                 } catch (err) {
@@ -517,7 +526,7 @@
 
             const t = THEMES[theme];
 
-            // Visual Scaling for Mobile Viewport (Does not affect export now)
+            // Mobile Scaling (Visual Only)
             const frameW = layout === 'strip' ? 200 : 320;
             const frameH = layout === 'strip' ? 800 : 400;
             const frameStyle = {
@@ -580,6 +589,7 @@
                                                             <img 
                                                                 src={images[idx].url}
                                                                 className="w-full h-full object-cover pointer-events-none select-none absolute top-0 left-0"
+                                                                crossOrigin="anonymous" // Security fix
                                                                 style={{
                                                                     transform: `translate(${images[idx].x}px, ${images[idx].y}px) scale(${images[idx].scale})`, 
                                                                 }}
