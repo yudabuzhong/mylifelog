@@ -9,7 +9,7 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
-    <!-- Babel for JSX -->
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <!-- Tailwind CSS -->
@@ -18,7 +18,6 @@
     <!-- html2canvas -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
-    <!-- Custom Fonts -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;900&family=Jura:wght@500;700&family=Press+Start+2P&family=Playfair+Display:ital,wght@1,600;1,900&family=Oswald:wght@500;700&family=VT323&display=swap');
 
@@ -28,11 +27,27 @@
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch; 
             overscroll-behavior-y: none;
+            background-color: #f0f0f0;
         }
         
         .no-select { user-select: none; -webkit-user-select: none; }
         .prevent-scroll { touch-action: none; }
         
+        /* Layout Containers */
+        .layout-grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .layout-strip-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: repeat(4, 1fr);
+            gap: 8px;
+        }
+
         /* --- THEMES --- */
         /* CUTE */
         .theme-cute-bg { background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); }
@@ -50,39 +65,22 @@
             border-radius: 20px;
             font-family: 'Fredoka', sans-serif;
             box-shadow: 4px 4px 10px rgba(166, 180, 200, 0.2), -4px -4px 10px rgba(255, 255, 255, 0.8);
-            transition: all 0.2s;
-            cursor: pointer;
         }
-        .theme-cute-btn:active { transform: scale(0.95); }
-        .theme-cute-btn:hover { color: #ff9a9e; }
         
         /* FUJI */
-        .theme-fuji-bg {
-            background-color: #2c2c2c;
-            background-image: repeating-linear-gradient(45deg, #333 0, #333 1px, transparent 0, transparent 50%);
-            background-size: 10px 10px;
-        }
+        .theme-fuji-bg { background-color: #2c2c2c; background-image: repeating-linear-gradient(45deg, #333 0, #333 1px, transparent 0, transparent 50%); background-size: 10px 10px; }
         .theme-fuji-panel {
             background: #1a1a1a;
             border-top: 2px solid #555;
             border-bottom: 4px solid #000;
             border-radius: 6px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
-            position: relative;
         }
         .theme-fuji-btn {
-            background: #333;
-            border: 1px solid #555;
-            color: #d4d4d4;
-            border-radius: 2px;
-            font-family: 'Oswald', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            background: #333; border: 1px solid #555; color: #d4d4d4;
+            border-radius: 2px; font-family: 'Oswald', sans-serif; text-transform: uppercase;
             box-shadow: inset 1px 1px 0 rgba(255,255,255,0.1), 2px 2px 5px rgba(0,0,0,0.5);
-            text-shadow: 0 -1px 0 rgba(0,0,0,0.8);
-            cursor: pointer;
         }
-        .theme-fuji-btn:active { background: #222; transform: translateY(1px); }
         .fuji-frame-bg { background-color: #111; border: 8px solid #000; }
         .fuji-sprocket-grid { border-left: 4px dashed #333; border-right: 4px dashed #333; }
         .fuji-date-glow {
@@ -93,49 +91,31 @@
         }
 
         /* CYBER */
-        .theme-cyber-bg {
-            background-color: #000;
-            background-image: linear-gradient(rgba(50, 255, 0, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(50, 255, 0, 0.1) 1px, transparent 1px);
-            background-size: 30px 30px;
-        }
+        .theme-cyber-bg { background-color: #000; background-image: linear-gradient(rgba(50, 255, 0, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(50, 255, 0, 0.1) 1px, transparent 1px); background-size: 30px 30px; }
         .theme-cyber-panel {
-            background: #050505;
-            border: 1px solid #32ff00;
-            box-shadow: 0 0 15px rgba(50, 255, 0, 0.2);
-            border-radius: 0;
+            background: #050505; border: 1px solid #32ff00;
+            box-shadow: 0 0 15px rgba(50, 255, 0, 0.2); border-radius: 0;
         }
         .theme-cyber-btn {
-            background: transparent;
-            border: 1px solid #32ff00;
-            color: #32ff00;
-            font-family: 'Jura', sans-serif;
-            text-transform: uppercase;
-            font-weight: bold;
-            transition: 0.1s;
-            cursor: pointer;
+            background: transparent; border: 1px solid #32ff00; color: #32ff00;
+            font-family: 'Jura', sans-serif; text-transform: uppercase; font-weight: bold;
         }
-        .theme-cyber-btn:hover { background: #32ff00; color: #000; box-shadow: 0 0 10px #32ff00; }
         .cyber-scanlines {
             background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
-            background-size: 100% 4px;
-            pointer-events: none;
+            background-size: 100% 4px; pointer-events: none;
         }
 
-        /* Filters */
+        /* FILTERS */
         .filter-cute img { filter: brightness(1.1) contrast(1.05) saturate(1.1) sepia(0.1); }
         .filter-fuji img { filter: grayscale(30%) contrast(1.1) brightness(0.9) sepia(0.3); }
         .filter-cyber img { filter: contrast(1.4) saturate(1.6) hue-rotate(15deg); }
 
-        /* Animation */
-        .sticker-enter { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        @keyframes popIn { 0% { transform: scale(0) rotate(0deg); opacity: 0; } 100% { transform: scale(1) rotate(var(--rot)); opacity: 1; } }
-        
         .hidden-input { display: none; }
         #loading { position: fixed; inset: 0; background: #f0f0f0; z-index: 9999; display: flex; justify-content: center; align-items: center; font-family: sans-serif; }
     </style>
 </head>
 <body>
-    <div id="loading">Loading...</div>
+    <div id="loading">加载资源中...</div>
     <div id="root"></div>
 
     <script type="text/babel">
@@ -146,10 +126,8 @@
 
         const { useState, useRef, useEffect } = React;
 
-        // --- ICONS ---
-        const Icon = ({ size = 20, children, ...props }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
-        );
+        // Icons
+        const Icon = ({ size = 20, children, ...props }) => (<svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>);
         const Download = (props) => <Icon {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></Icon>;
         const Sparkles = (props) => <Icon {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></Icon>;
         const Trash2 = (props) => <Icon {...props}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></Icon>;
@@ -159,53 +137,41 @@
         const Dice = (props) => <Icon {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/></Icon>;
         const RefreshCcw = (props) => <Icon {...props}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></Icon>;
         const X = (props) => <Icon {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Icon>;
-        const Calendar = (props) => <Icon {...props}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></Icon>;
 
-        // Data
+        // Data & Themes
         const STICKER_SETS = {
             cute: ['🎀', '🌈', '🍒', '🧸', '💖', '✨', '🐰', '🍭'],
             fuji: ['📸', '🎞️', '📅', '🗻', '☕', '🍂', '🚲', '🎹'],
             cyber: ['👾', '💿', '⚡', '🤖', '🕶️', '💊', '🛸', '🌌']
         };
-
         const TEXT_PRESETS = {
             cute: ["Sweet Day", "Love You", "XOXO", "Besties", "So Cute!", "Happy!", "My Girl", "Pink Mood"],
-            fuji: ["NO.001", "FILM RECORD", "KODAK PORTRA", "JAN 2026", "FUJICOLOR", "DAILY LOG", "NEGATIVE", "RAW"],
-            cyber: ["SYS.2026", "GLITCH", "ERROR 404", "ACID_MODE", "CYBER.LOG", "DATA LOST", "WAKE UP", "NEON CITY"]
+            fuji: ["NO.001", "FILM RECORD", "KODAK PORTRA", "JAN 2026", "FUJICOLOR", "DAILY LOG", "NEGATIVE"],
+            cyber: ["SYS.2026", "GLITCH", "ERROR 404", "ACID_MODE", "CYBER.LOG", "DATA LOST", "NEON CITY"]
         };
-
         const THEMES = {
             cute: { 
                 name: 'Cute', 
                 frameClass: 'bg-white rounded-2xl shadow-lg border-[6px] border-white',
-                panelClass: 'theme-cute-panel',
-                btnClass: 'theme-cute-btn',
-                textColor: 'text-indigo-500',
-                labelColor: 'text-gray-500',
-                fontClass: 'font-[Fredoka]',
-                dateClass: 'text-gray-400 font-[Fredoka] text-[10px]',
+                panelClass: 'theme-cute-panel', btnClass: 'theme-cute-btn',
+                textColor: 'text-indigo-500', labelColor: 'text-gray-500', fontClass: 'font-[Fredoka]',
+                dateStyle: 'text-gray-400 font-[Fredoka] text-[10px]',
                 decor: <div className="absolute top-2 left-2 text-2xl animate-pulse z-40 drop-shadow-md">☁️</div>
             },
             fuji: { 
                 name: 'Fuji', 
                 frameClass: 'fuji-frame-bg shadow-2xl rounded-sm',
-                panelClass: 'theme-fuji-panel',
-                btnClass: 'theme-fuji-btn',
-                textColor: 'text-yellow-500', 
-                labelColor: 'text-gray-400',
-                fontClass: 'font-mono',
-                dateClass: 'fuji-date-glow text-right text-xs',
+                panelClass: 'theme-fuji-panel', btnClass: 'theme-fuji-btn',
+                textColor: 'text-yellow-500', labelColor: 'text-gray-400', fontClass: 'font-mono',
+                dateStyle: 'fuji-date-glow text-right text-xs',
                 decor: <div className="absolute top-2 right-2 text-[8px] text-white/50 border border-white/30 px-1 font-mono tracking-widest z-40">ISO 400</div>
             },
             cyber: { 
                 name: 'Cyber', 
                 frameClass: 'bg-black border border-[#32ff00] shadow-[0_0_20px_rgba(50,255,0,0.3)]',
-                panelClass: 'theme-cyber-panel',
-                btnClass: 'theme-cyber-btn',
-                textColor: 'text-[#32ff00]',
-                labelColor: 'text-[#32ff00]',
-                fontClass: 'font-[Jura]',
-                dateClass: 'text-[#32ff00] font-[Jura] text-[10px] tracking-widest opacity-80',
+                panelClass: 'theme-cyber-panel', btnClass: 'theme-cyber-btn',
+                textColor: 'text-[#32ff00]', labelColor: 'text-[#32ff00]', fontClass: 'font-[Jura]',
+                dateStyle: 'text-[#32ff00] font-[Jura] text-[10px] tracking-widest opacity-80',
                 decor: (
                     <>
                         <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#32ff00] to-transparent z-40 opacity-50"></div>
@@ -217,554 +183,211 @@
 
         const HeaderLogo = ({ theme }) => {
             const styles = {
-                cute: (
-                    <div className="flex flex-col items-center">
-                         <h1 className="text-4xl font-[Fredoka] font-black text-pink-400 tracking-wide" style={{ textShadow: '2px 2px 0px #e0c3fc, 4px 4px 0px rgba(255,255,255,0.5)' }}>
-                             LIFELOG <span className="text-2xl">2026</span>
-                         </h1>
-                         <div className="w-16 h-1 bg-gradient-to-r from-purple-300 to-pink-300 rounded-full mt-1"></div>
-                    </div>
-                ),
-                fuji: (
-                    <div className="flex items-center gap-3 border-[3px] border-[#d4d4d4] px-4 py-2 bg-[#1a1a1a] shadow-lg rounded-sm">
-                        <div className="w-6 h-6 rounded-full bg-red-600 border-2 border-white/20 shadow-inner flex items-center justify-center">
-                             <div className="w-2 h-2 bg-white/50 rounded-full blur-[1px]"></div>
-                        </div>
-                        <div className="flex flex-col leading-none">
-                            <span className="text-2xl font-[Oswald] font-bold text-[#d4d4d4] tracking-tighter uppercase transform scale-y-110">
-                                Lifelog
-                            </span>
-                            <span className="text-[10px] text-red-600 font-bold tracking-[0.4em] uppercase text-right w-full block -mt-1">
-                                2026
-                            </span>
-                        </div>
-                    </div>
-                ),
-                cyber: (
-                    <div className="relative border border-[#32ff00] px-4 py-1 bg-black skew-x-[-10deg]">
-                         <span className="block text-3xl font-[Jura] font-black tracking-tighter text-[#32ff00] skew-x-[10deg] drop-shadow-[0_0_5px_rgba(50,255,0,0.8)]">
-                             LIFELOG_2026
-                         </span>
-                         <span className="absolute -top-3 -right-3 text-[10px] bg-[#32ff00] text-black px-1 font-bold skew-x-[10deg]">v2.6</span>
-                    </div>
-                )
+                cute: (<div className="flex flex-col items-center"><h1 className="text-4xl font-[Fredoka] font-black text-pink-400 tracking-wide" style={{ textShadow: '2px 2px 0px #e0c3fc, 4px 4px 0px rgba(255,255,255,0.5)' }}>LIFELOG <span className="text-2xl">2026</span></h1><div className="w-16 h-1 bg-gradient-to-r from-purple-300 to-pink-300 rounded-full mt-1"></div></div>),
+                fuji: (<div className="flex items-center gap-3 border-[3px] border-[#d4d4d4] px-4 py-2 bg-[#1a1a1a] shadow-lg rounded-sm"><div className="w-6 h-6 rounded-full bg-red-600 border-2 border-white/20 shadow-inner flex items-center justify-center"><div className="w-2 h-2 bg-white/50 rounded-full blur-[1px]"></div></div><div className="flex flex-col leading-none"><span className="text-2xl font-[Oswald] font-bold text-[#d4d4d4] tracking-tighter uppercase transform scale-y-110">Lifelog</span><span className="text-[10px] text-red-600 font-bold tracking-[0.4em] uppercase text-right w-full block -mt-1">2026</span></div></div>),
+                cyber: (<div className="relative border border-[#32ff00] px-4 py-1 bg-black skew-x-[-10deg]"><span className="block text-3xl font-[Jura] font-black tracking-tighter text-[#32ff00] skew-x-[10deg] drop-shadow-[0_0_5px_rgba(50,255,0,0.8)]">LIFELOG_2026</span><span className="absolute -top-3 -right-3 text-[10px] bg-[#32ff00] text-black px-1 font-bold skew-x-[10deg]">v2.6</span></div>)
             };
             return styles[theme] || styles.cute;
         };
 
         const App = () => {
             const loadState = (key, def) => localStorage.getItem(key) || def;
-            
             const [layout, setLayout] = useState('grid');
-            const [theme, setTheme] = useState(() => loadState('lifelog_theme', 'cute'));
+            const [theme, setTheme] = useState(() => loadState('lifelog_theme', 'fuji'));
             const [customText, setCustomText] = useState(() => loadState('lifelog_text', 'SWEET DAY'));
             const [dateText, setDateText] = useState(() => loadState('lifelog_date', new Date().toLocaleDateString('en-CA').replace(/-/g, '.')));
-            
-            const [images, setImages] = useState([
-                { url: null, x: 0, y: 0, scale: 1 }, { url: null, x: 0, y: 0, scale: 1 },
-                { url: null, x: 0, y: 0, scale: 1 }, { url: null, x: 0, y: 0, scale: 1 }
-            ]);
+            const [images, setImages] = useState(Array(4).fill({ url: null, x: 0, y: 0, scale: 1 }));
             const [stickers, setStickers] = useState([]);
             const [isGenerating, setIsGenerating] = useState(false);
             const [activeSlot, setActiveSlot] = useState(null);
             const [activeStickerId, setActiveStickerId] = useState(null);
             const [generatedImage, setGeneratedImage] = useState(null);
-            
             const frameRef = useRef(null);
             const batchInputRef = useRef(null);
             const singleInputRef = useRef(null);
-            
             const dragStartRef = useRef({ x: 0, y: 0 });
             const isDraggingImageRef = useRef(false);
             const isDraggingStickerRef = useRef(false);
 
-            useEffect(() => {
-                document.body.className = `theme-${theme}-bg`;
-                localStorage.setItem('lifelog_theme', theme);
-            }, [theme]);
-
+            useEffect(() => { document.body.className = `theme-${theme}-bg`; localStorage.setItem('lifelog_theme', theme); }, [theme]);
             useEffect(() => { localStorage.setItem('lifelog_text', customText); }, [customText]);
             useEffect(() => { localStorage.setItem('lifelog_date', dateText); }, [dateText]);
 
+            const getClientCoords = (e) => (e.touches && e.touches.length > 0) ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+            
+            const handleImageStart = (e, index) => { if (!images[index].url) return; const { x, y } = getClientCoords(e); setActiveSlot(index); setActiveStickerId(null); isDraggingImageRef.current = true; dragStartRef.current = { x: x - images[index].x, y: y - images[index].y }; };
+            const handleStickerStart = (e, stickerId) => { e.stopPropagation(); const { x, y } = getClientCoords(e); setActiveStickerId(stickerId); setActiveSlot(null); isDraggingStickerRef.current = true; if(frameRef.current) { const rect = frameRef.current.getBoundingClientRect(); dragStartRef.current = { x, y, initialPctX: stickers.find(s=>s.id===stickerId).x, initialPctY: stickers.find(s=>s.id===stickerId).y, width: rect.width, height: rect.height }; }};
+            const handleMove = (e) => {
+                if (!isDraggingImageRef.current && !isDraggingStickerRef.current) return;
+                const { x, y } = getClientCoords(e);
+                if (isDraggingImageRef.current && activeSlot !== null) { e.preventDefault(); const newX = x - dragStartRef.current.x; const newY = y - dragStartRef.current.y; setImages(prev => { const u = [...prev]; u[activeSlot] = { ...u[activeSlot], x: newX, y: newY }; return u; }); }
+                if (isDraggingStickerRef.current && activeStickerId !== null) { e.preventDefault(); const { x: sx, y: sy, initialPctX, initialPctY, width, height } = dragStartRef.current; setStickers(prev => prev.map(s => s.id === activeStickerId ? { ...s, x: initialPctX + ((x - sx)/width)*100, y: initialPctY + ((y - sy)/height)*100 } : s)); }
+            };
+            const handleEnd = () => { isDraggingImageRef.current = false; isDraggingStickerRef.current = false; };
             const handleWheel = (e) => {
-                if (activeSlot !== null || activeStickerId !== null) {
-                    const delta = -e.deltaY * 0.001;
-                    if (activeSlot !== null) {
-                        setImages(prev => {
-                            const updated = [...prev];
-                            const newScale = Math.max(0.5, Math.min(3, updated[activeSlot].scale + delta));
-                            updated[activeSlot] = { ...updated[activeSlot], scale: newScale };
-                            return updated;
-                        });
-                    } else if (activeStickerId !== null) {
-                        setStickers(prev => prev.map(s => {
-                            if (s.id === activeStickerId) {
-                                return { ...s, scale: Math.max(0.2, Math.min(3, (s.scale || 1) + delta)) };
-                            }
-                            return s;
-                        }));
+                if (activeSlot !== null) { const delta = -e.deltaY * 0.001; setImages(prev => { const u = [...prev]; u[activeSlot].scale = Math.max(0.5, Math.min(3, u[activeSlot].scale + delta)); return u; }); }
+            };
+
+            const validateAndLoadImage = (file) => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    const url = URL.createObjectURL(file);
+                    img.onload = () => {
+                        if (img.width < 300 || img.height < 300) {
+                            alert(`图片尺寸太小 (${img.width}x${img.height})，建议上传大于 300x300 的图片`);
+                            resolve(null);
+                        } else {
+                            resolve(url); 
+                        }
+                    };
+                    img.src = url;
+                });
+            };
+
+            const handleBatchUpload = async (e) => {
+                const files = Array.from(e.target.files).slice(0, 4);
+                for (let i = 0; i < files.length; i++) {
+                    const result = await validateAndLoadImage(files[i]);
+                    if (result) {
+                        setImages(prev => { const u = [...prev]; u[i] = { url: result, x: 0, y: 0, scale: 1 }; return u; });
                     }
                 }
             };
 
-            const handleBatchUpload = (e) => {
-                const files = Array.from(e.target.files);
-                if (files.length === 0) return;
-                files.slice(0, 4).forEach((file, idx) => {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                         setImages(prev => {
-                            const updated = [...prev];
-                            updated[idx] = { ...updated[idx], url: event.target.result, x: 0, y: 0, scale: 1 };
-                            return updated;
-                         });
-                    };
-                    reader.readAsDataURL(file);
-                });
-            };
-
-            const handleSingleUpload = (e) => {
-                const file = e.target.files[0];
-                if (file && activeSlot !== null) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        setImages(prev => {
-                            const updated = [...prev];
-                            updated[activeSlot] = { ...updated[activeSlot], url: event.target.result, x:0, y:0, scale: 1 };
-                            return updated;
-                        });
-                    };
-                    reader.readAsDataURL(file);
+            const handleSingleUpload = async (e) => {
+                if (activeSlot === null || !e.target.files[0]) return;
+                const result = await validateAndLoadImage(e.target.files[0]);
+                if (result) {
+                    setImages(prev => { const u = [...prev]; u[activeSlot] = { ...u[activeSlot], url: result, x: 0, y: 0, scale: 1 }; return u; });
                 }
             };
 
-            const triggerBatchUpload = () => { batchInputRef.current.click(); };
-            const triggerSingleUpload = (index) => {
-                setActiveSlot(index);
-                setTimeout(() => singleInputRef.current.click(), 0);
-            };
+            const generateStickers = () => { const set = STICKER_SETS[theme]; setStickers(Array(4).fill(0).map(()=>({ id: Math.random(), content: set[Math.floor(Math.random()*set.length)], x: Math.random()*80+5, y: Math.random()*80+5, rotation: Math.random()*40-20, scale: Math.random()*0.5+0.8 }))); };
+            const generateRandomText = () => { const presets = TEXT_PRESETS[theme]; setCustomText(presets[Math.floor(Math.random() * presets.length)]); };
 
-            const getClientCoords = (e) => {
-                if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                return { x: e.clientX, y: e.clientY };
-            };
-
-            const handleImageStart = (e, index) => {
-                if (!images[index].url) return;
-                const { x, y } = getClientCoords(e);
-                setActiveSlot(index);
-                setActiveStickerId(null); 
-                isDraggingImageRef.current = true;
-                dragStartRef.current = { x: x - images[index].x, y: y - images[index].y };
-            };
-
-            const handleStickerStart = (e, stickerId) => {
-                e.stopPropagation(); 
-                const { x, y } = getClientCoords(e);
-                setActiveStickerId(stickerId);
-                setActiveSlot(null); 
-                const sticker = stickers.find(s => s.id === stickerId);
-                if (!sticker) return;
-                isDraggingStickerRef.current = true;
-                if (frameRef.current) {
-                    const rect = frameRef.current.getBoundingClientRect();
-                    dragStartRef.current = {
-                        x: x, y: y,
-                        initialPctX: sticker.x,
-                        initialPctY: sticker.y,
-                        width: rect.width,
-                        height: rect.height
-                    };
-                }
-            };
-
-            const handleMove = (e) => {
-                if (!isDraggingImageRef.current && !isDraggingStickerRef.current) return;
-                const { x, y } = getClientCoords(e);
-
-                if (isDraggingImageRef.current && activeSlot !== null) {
-                    e.preventDefault(); 
-                    const newX = x - dragStartRef.current.x;
-                    const newY = y - dragStartRef.current.y;
-                    setImages(prev => {
-                        const updated = [...prev];
-                        updated[activeSlot] = { ...updated[activeSlot], x: newX, y: newY };
-                        return updated;
-                    });
-                }
-                
-                if (isDraggingStickerRef.current && activeStickerId !== null) {
-                    e.preventDefault();
-                    const { x: startX, y: startY, initialPctX, initialPctY, width, height } = dragStartRef.current;
-                    const deltaX = x - startX;
-                    const deltaY = y - startY;
-                    const deltaPctX = (deltaX / width) * 100;
-                    const deltaPctY = (deltaY / height) * 100;
-                    setStickers(prev => prev.map(s => {
-                        if (s.id === activeStickerId) {
-                            return { ...s, x: initialPctX + deltaPctX, y: initialPctY + deltaPctY };
-                        }
-                        return s;
-                    }));
-                }
-            };
-
-            const handleEnd = () => {
-                isDraggingImageRef.current = false;
-                isDraggingStickerRef.current = false;
-            };
-
-            const generateStickers = () => {
-                const set = STICKER_SETS[theme];
-                const newStickers = [];
-                const count = Math.floor(Math.random() * 3) + 4; 
-                for(let i=0; i<count; i++) {
-                    newStickers.push({
-                        id: Math.random(),
-                        content: set[Math.floor(Math.random() * set.length)],
-                        x: Math.random() * 80 + 5,
-                        y: Math.random() * 85 + 5,
-                        rotation: Math.random() * 40 - 20,
-                        scale: Math.random() * 0.5 + 0.8
-                    });
-                }
-                setStickers(newStickers);
-            };
-
-            const removeStickers = () => {
-                if (activeStickerId) {
-                    setStickers(prev => prev.filter(s => s.id !== activeStickerId));
-                    setActiveStickerId(null);
-                } else {
-                    setStickers([]);
-                }
-            };
-
-            const generateRandomText = () => {
-                const presets = TEXT_PRESETS[theme];
-                setCustomText(presets[Math.floor(Math.random() * presets.length)]);
-            };
-
-            // --- DESKTOP SIMULATION MODE CAPTURE ---
-            // This is the most reliable way to prevent mobile squash distortion
+            // --- FIXED: DOM CLONING & SANDBOX STRATEGY ---
             const handleDownload = async () => {
-                if (!frameRef.current) return;
                 setIsGenerating(true);
-                setActiveSlot(null);
-                setActiveStickerId(null);
+                setActiveSlot(null); setActiveStickerId(null);
                 
                 await document.fonts.ready;
-                await new Promise(resolve => setTimeout(resolve, 150));
+                await new Promise(r => setTimeout(r, 200));
 
                 try {
-                    // 1. Create a "Sandbox" container with explicit desktop-like dimensions
-                    const ghost = document.createElement('div');
-                    ghost.style.position = 'fixed';
-                    ghost.style.top = '0';
-                    ghost.style.left = '0';
-                    ghost.style.zIndex = '9999'; 
-                    ghost.style.opacity = '0.01'; // Visible to browser, hidden to user
-                    ghost.style.pointerEvents = 'none'; 
-                    
-                    // 2. Set dimensions matching the logic
-                    // Grid: 320x400, Strip: 200x800
-                    const targetWidth = layout === 'strip' ? 200 : 320;
-                    const targetHeight = layout === 'strip' ? 800 : 400;
-                    
-                    ghost.style.width = `${targetWidth}px`;
-                    ghost.style.height = `${targetHeight}px`;
-                    
-                    // 3. Clone the Frame (Using cloneNode guarantees identical DOM structure/Classes)
                     const originalFrame = frameRef.current;
                     const clone = originalFrame.cloneNode(true);
                     
-                    // 4. Force Reset flexible styles on the clone to prevent squeeze
-                    clone.style.width = '100%';
-                    clone.style.height = '100%';
-                    clone.style.transform = 'none'; 
+                    // Force strict dimensions on the clone to prevent squash
+                    const W = layout === 'strip' ? 200 : 320;
+                    const H = layout === 'strip' ? 800 : 400;
+                    
+                    clone.style.width = `${W}px`;
+                    clone.style.height = `${H}px`;
+                    clone.style.transform = 'none';
                     clone.style.margin = '0';
                     clone.style.boxShadow = 'none';
+                    clone.style.borderRadius = '0'; // Clean edges
                     
-                    // 5. Append to Ghost
-                    ghost.appendChild(clone);
-                    document.body.appendChild(ghost);
+                    // Create invisible sandbox
+                    const sandbox = document.createElement('div');
+                    Object.assign(sandbox.style, {
+                        position: 'fixed', top: '0', left: '0', 
+                        width: `${W}px`, height: `${H}px`,
+                        zIndex: '-9999', // Hide behind everything
+                        visibility: 'visible', overflow: 'hidden'
+                    });
+                    
+                    // Ensure clone background matches theme for transparency safety
+                    if (theme === 'fuji') sandbox.style.backgroundColor = '#1a1a1a';
+                    else if (theme === 'cyber') sandbox.style.backgroundColor = '#000';
+                    else sandbox.style.backgroundColor = '#fff';
 
-                    // 6. Wait for layout paint
+                    sandbox.appendChild(clone);
+                    document.body.appendChild(sandbox);
+                    
+                    // Wait for render
                     await new Promise(r => setTimeout(r, 300));
 
-                    // 7. Capture with DESKTOP VIEWPORT simulation
                     const canvas = await html2canvas(clone, { 
-                        width: targetWidth,
-                        height: targetHeight,
-                        windowWidth: 1600, // Forces the layout engine to behave like a desktop
-                        scale: 4, // High Res
-                        backgroundColor: null,
+                        scale: 4, 
                         useCORS: true,
+                        backgroundColor: null,
+                        width: W, height: H,
+                        windowWidth: 1600, // Force Desktop layout logic
                         logging: false
                     });
                     
-                    // 8. Cleanup
-                    document.body.removeChild(ghost);
+                    document.body.removeChild(sandbox);
                     
                     const dataUrl = canvas.toDataURL('image/png');
                     
-                    if (!/Mobi|Android/i.test(navigator.userAgent)) {
+                    const isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+                    if (isMobile) {
+                        setGeneratedImage(dataUrl);
+                    } else {
                         const link = document.createElement('a');
                         link.download = `lifelog_${theme}_${Date.now()}.png`;
                         link.href = dataUrl;
                         link.click();
                     }
-                    
-                    setGeneratedImage(dataUrl);
 
-                } catch (err) {
-                    alert("生成失败，请重试");
-                    console.error(err);
-                } finally {
-                    setIsGenerating(false);
-                }
+                } catch(e) { console.error(e); alert("保存出错，请重试"); } 
+                finally { setIsGenerating(false); }
             };
-
+            
             const t = THEMES[theme];
-
-            // Mobile Scaling (Visual Only - DOM remains true size)
             const frameW = layout === 'strip' ? 200 : 320;
             const frameH = layout === 'strip' ? 800 : 400;
-            const frameStyle = {
-                width: `${frameW}px`,
-                height: `${frameH}px`,
-                transformOrigin: 'top center'
-            };
+            const frameStyle = { width: `${frameW}px`, height: `${frameH}px`, transformOrigin: 'top center' };
 
             return (
-                <div 
-                    className={`min-h-screen flex items-center justify-center p-4 theme-transition ${isGenerating ? 'printing' : ''}`}
-                    onMouseMove={handleMove}
-                    onMouseUp={handleEnd}
-                    onMouseLeave={handleEnd}
-                    onTouchMove={handleMove}
-                    onTouchEnd={handleEnd}
-                    onWheel={handleWheel}
-                >
+                <div className={`min-h-screen flex items-center justify-center p-4 theme-transition ${isGenerating?'printing':''}`} onMouseMove={handleMove} onMouseUp={handleEnd} onMouseLeave={handleEnd} onTouchMove={handleMove} onTouchEnd={handleEnd} onWheel={handleWheel}>
                     <div className={`flex flex-col md:flex-row gap-0 max-w-4xl w-full mx-auto ${t.panelClass} transition-all duration-300`}>
-                        
-                        {/* LEFT: CANVAS AREA */}
+                        {/* LEFT AREA */}
                         <div className="flex-1 p-6 md:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-gray-300/10 overflow-hidden">
                             <div className="mb-6"><HeaderLogo theme={theme} /></div>
-
-                            {/* SCALING WRAPPER */}
-                            <div className="w-full flex justify-center overflow-hidden" style={{ minHeight: '400px' }}>
+                            <div className="w-full flex justify-center overflow-hidden" style={{minHeight:'400px'}}>
                                 <div className="scale-[0.75] md:scale-100 origin-top transition-transform no-select">
-                                    {/* MAIN CANVAS */}
-                                    <div 
-                                        ref={frameRef}
-                                        className={`
-                                            relative p-4 transition-all duration-500 overflow-hidden flex flex-col shrink-0
-                                            ${t.frameClass}
-                                        `}
-                                        style={frameStyle}
-                                    >
+                                    <div ref={frameRef} className={`relative p-4 overflow-hidden flex flex-col shrink-0 ${t.frameClass}`} style={frameStyle}>
                                         {t.decor}
-
-                                        <div className={`
-                                            w-full flex-1 gap-2 transition-all duration-300
-                                            ${layout === 'grid' ? 'grid grid-cols-2 grid-rows-2' : 'grid grid-cols-1 grid-rows-4'}
-                                            ${theme === 'fuji' ? 'fuji-sprocket-grid' : ''}
-                                        `}>
-                                            {[0, 1, 2, 3].map((idx) => (
-                                                <div 
-                                                    key={idx}
-                                                    className={`
-                                                        relative overflow-hidden group flex items-center justify-center prevent-scroll w-full h-full
-                                                        ${images[idx].url ? '' : 'cursor-pointer hover:bg-black/10'}
-                                                        ${activeSlot === idx && !isGenerating ? `ring-2 ring-offset-1 z-20 ${theme === 'cyber' ? 'ring-[#32ff00]' : 'ring-red-500'}` : ''}
-                                                        filter-${theme}
-                                                        ${theme === 'fuji' ? 'bg-[#1a1a1a]' : 'bg-gray-100'}
-                                                    `}
-                                                    onMouseDown={(e) => handleImageStart(e, idx)}
-                                                    onTouchStart={(e) => handleImageStart(e, idx)}
-                                                    onClick={() => !images[idx].url && triggerSingleUpload(idx)}
-                                                >
-                                                    {images[idx].url ? (
-                                                        <>
-                                                            <img 
-                                                                src={images[idx].url}
-                                                                className="w-full h-full object-cover pointer-events-none select-none absolute top-0 left-0"
-                                                                crossOrigin="anonymous" 
-                                                                style={{
-                                                                    transform: `translate(${images[idx].x}px, ${images[idx].y}px) scale(${images[idx].scale})`, 
-                                                                }}
-                                                                alt="uploaded"
-                                                            />
-                                                            {!isGenerating && (
-                                                                <button 
-                                                                    onClick={(e) => { e.stopPropagation(); triggerSingleUpload(idx); }}
-                                                                    onTouchEnd={(e) => { e.stopPropagation(); triggerSingleUpload(idx); }}
-                                                                    className={`absolute top-1 right-1 p-1.5 rounded-full z-50 opacity-0 group-hover:opacity-100 transition-opacity ${theme === 'cyber' ? 'bg-[#32ff00] text-black' : 'bg-white text-black'}`}
-                                                                    title="替换图片"
-                                                                >
-                                                                    <RefreshCcw size={14} />
-                                                                </button>
-                                                            )}
-                                                        </>
-                                                    ) : (
-                                                        <div className={`font-black text-xl opacity-20 ${theme === 'fuji' ? 'text-white' : 'text-gray-300'}`}>{idx + 1}</div>
-                                                    )}
+                                        <div className={`w-full flex-1 gap-2 ${layout==='grid'?'layout-grid-container':'layout-strip-container'} ${theme==='fuji'?'fuji-sprocket-grid':''}`}>
+                                            {images.map((img,i)=>(
+                                                <div key={i} className={`relative overflow-hidden group flex items-center justify-center prevent-scroll w-full h-full ${activeSlot===i?'ring-2 ring-offset-1 z-20 '+(theme==='cyber'?'ring-[#32ff00]':'ring-red-500'):''} filter-${theme} ${theme==='fuji'?'bg-[#1a1a1a]':'bg-gray-100'}`}
+                                                    onMouseDown={(e)=>handleImageStart(e,i)} onTouchStart={(e)=>handleImageStart(e,i)} onClick={()=>!img.url && singleInputRef.current.click()}>
+                                                    {img.url ? <><img src={img.url} className="absolute inset-0 w-full h-full object-cover pointer-events-none block" style={{transform:`translate(${img.x}px,${img.y}px) scale(${img.scale})`, minWidth:'100.5%', minHeight:'100.5%'}}/><button onClick={(e)=>{e.stopPropagation();setActiveSlot(i);setTimeout(()=>singleInputRef.current.click(),0)}} onTouchEnd={(e)=>{e.stopPropagation();setActiveSlot(i);setTimeout(()=>singleInputRef.current.click(),0)}} className="absolute top-1 right-1 p-1.5 rounded-full z-50 bg-white/80 text-black opacity-0 group-hover:opacity-100"><RefreshCcw size={14}/></button></> : <div className="font-black text-xl opacity-20">{i+1}</div>}
                                                 </div>
                                             ))}
                                         </div>
-
-                                        <div className="absolute inset-0 z-40 pointer-events-none">
-                                            {stickers.map((s) => (
-                                                <div 
-                                                    key={s.id}
-                                                    onMouseDown={(e) => handleStickerStart(e, s.id)}
-                                                    onTouchStart={(e) => handleStickerStart(e, s.id)}
-                                                    className={`
-                                                        absolute sticker-enter text-3xl drop-shadow-md cursor-grab active:cursor-grabbing select-none hover:scale-110 transition-transform pointer-events-auto prevent-scroll
-                                                        ${activeStickerId === s.id && !isGenerating ? 'opacity-80' : ''}
-                                                    `}
-                                                    style={{
-                                                        left: `${s.x}%`, top: `${s.y}%`,
-                                                        transform: `rotate(${s.rotation}deg) scale(${s.scale || 1})`
-                                                    }}
-                                                >
-                                                    {s.content}
-                                                </div>
-                                            ))}
-                                        </div>
-                                        
-                                        <div className="mt-4 pb-2 flex flex-col items-center justify-center z-30 relative pointer-events-none shrink-0 w-full">
-                                            <div className={`
-                                                text-center font-bold uppercase tracking-widest px-2 break-words w-full
-                                                ${t.textColor} ${t.fontClass}
-                                                ${theme === 'cyber' ? 'text-lg tracking-tighter drop-shadow-[0_0_5px_rgba(50,255,0,0.8)]' : 'text-sm'}
-                                                ${theme === 'fuji' ? 'tracking-[0.2em] text-xs font-normal opacity-80' : ''}
-                                            `}>
-                                                {customText}
-                                            </div>
-                                            <div className={`
-                                                tracking-widest mt-1 opacity-90
-                                                ${t.dateClass}
-                                            `}>
-                                                {dateText}
-                                            </div>
-                                        </div>
+                                        <div className="absolute inset-0 z-40 pointer-events-none">{stickers.map(s=>(<div key={s.id} onMouseDown={(e)=>handleStickerStart(e,s.id)} onTouchStart={(e)=>handleStickerStart(e,s.id)} className={`absolute sticker-enter text-3xl cursor-grab pointer-events-auto prevent-scroll ${activeStickerId===s.id?'opacity-80':''}`} style={{left:`${s.x}%`, top:`${s.y}%`, transform:`rotate(${s.rotation}deg) scale(${s.scale||1})`}}>{s.content}</div>))}</div>
+                                        <div className="mt-4 pb-2 flex flex-col items-center justify-center z-30 relative pointer-events-none shrink-0 w-full"><div className={`text-center font-bold uppercase tracking-widest px-2 break-words w-full ${t.textColor} ${t.fontClass}`}>{customText}</div><div className={`tracking-widest mt-1 opacity-90 ${t.dateStyle}`}>{dateText}</div></div>
                                     </div>
                                 </div>
                             </div>
-
                             <div className="flex gap-4 mt-6">
-                                <button onClick={() => setLayout('grid')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border flex items-center gap-2 ${t.btnClass} ${layout === 'grid' ? 'bg-opacity-100 ring-2 ring-offset-1' : 'bg-opacity-50 opacity-60'}`}>
-                                    <GridIcon size={14} /> 2x2 Grid
-                                </button>
-                                <button onClick={() => setLayout('strip')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border flex items-center gap-2 ${t.btnClass} ${layout === 'strip' ? 'bg-opacity-100 ring-2 ring-offset-1' : 'bg-opacity-50 opacity-60'}`}>
-                                    <StripIcon size={14} /> 1x4 Strip
-                                </button>
+                                <button onClick={()=>setLayout('grid')} className={`px-4 py-2 rounded text-xs font-bold border flex items-center gap-2 ${t.btnClass} ${layout==='grid'?'opacity-100 ring-2':'opacity-50'}`}><GridIcon size={14}/> 四宫格</button>
+                                <button onClick={()=>setLayout('strip')} className={`px-4 py-2 rounded text-xs font-bold border flex items-center gap-2 ${t.btnClass} ${layout==='strip'?'opacity-100 ring-2':'opacity-50'}`}><StripIcon size={14}/> 四连拍</button>
                             </div>
                         </div>
 
-                        {/* RIGHT: CONTROLS */}
+                        {/* RIGHT AREA */}
                         <div className="w-full md:w-[320px] p-6 flex flex-col justify-center gap-5 backdrop-blur-sm">
+                            <div><h3 className={`text-[10px] font-bold uppercase mb-2 ${t.labelColor}`}>风格 / STYLE</h3><div className="flex gap-2">{Object.entries(THEMES).map(([k,v])=><button key={k} onClick={()=>setTheme(k)} className={`flex-1 py-2 text-[10px] font-bold border ${theme===k?'ring-2':'opacity-60'} ${t.btnClass}`}>{v.name}</button>)}</div></div>
+                            <div><h3 className={`text-[10px] font-bold uppercase mb-2 ${t.labelColor} flex justify-between`}><span>上传图片 / UPLOAD</span>{activeSlot!==null&&<span className="bg-black text-white px-1 rounded">#{activeSlot+1}</span>}</h3><button onClick={()=>batchInputRef.current.click()} className={`w-full py-2.5 flex justify-center items-center gap-2 font-bold text-xs ${t.btnClass}`}><Layers size={14}/> 一键填满 (4张)</button></div>
                             <div>
-                                <h3 className={`text-[10px] font-bold uppercase mb-2 ${t.labelColor} opacity-80 tracking-wider`}>选择风格 / THEME</h3>
-                                <div className="flex gap-2">
-                                    {Object.entries(THEMES).map(([key, item]) => (
-                                        <button key={key} onClick={() => setTheme(key)} className={`flex-1 py-2 text-[10px] font-bold transition-all border ${theme === key ? 'ring-2 ring-offset-1 shadow-md transform -translate-y-0.5' : 'opacity-60 hover:opacity-100'} ${t.btnClass}`}>
-                                            {item.name}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 className={`text-[10px] font-bold uppercase mb-2 ${t.labelColor} opacity-80 tracking-wider flex justify-between`}>
-                                    <span>图片上传 / UPLOAD</span>
-                                    {activeSlot !== null && <span className="bg-black text-white px-1 rounded">选中图 {activeSlot+1}</span>}
-                                </h3>
-                                <button onClick={triggerBatchUpload} className={`w-full py-2.5 mb-3 flex items-center justify-center gap-2 font-bold text-xs transition-transform active:scale-95 ${t.btnClass}`}>
-                                    <Layers size={14}/> 一键上传 (4张)
-                                </button>
-                                <p className={`text-[9px] text-center opacity-50 ${t.labelColor}`}>
-                                    *长按拖动位置 • 滚动鼠标缩放 • 悬浮替换
-                                </p>
-                            </div>
-
-                            <div>
-                                <h3 className={`text-[10px] font-bold uppercase mb-2 ${t.labelColor} opacity-80 tracking-wider`}>装饰 / DECOR</h3>
-                                <div className="flex gap-2 mb-2">
-                                    <input 
-                                        type="text" 
-                                        placeholder="输入或随机生成..." 
-                                        value={customText} 
-                                        onChange={(e) => setCustomText(e.target.value)} 
-                                        className={`flex-1 bg-transparent border-b-2 focus:outline-none text-xs font-bold py-1 transition-colors 
-                                            ${theme === 'fuji' ? 'border-gray-600 text-gray-300 focus:border-white placeholder-gray-500' : ''}
-                                            ${theme === 'cyber' ? 'border-[#32ff00] text-[#32ff00] focus:border-[#32ff00] placeholder-[#32ff00]/50' : ''}
-                                            ${theme === 'cute' ? 'border-gray-200 text-gray-800 focus:border-black placeholder-gray-400' : ''}
-                                        `} 
-                                    />
-                                    <button onClick={generateRandomText} className={`px-3 rounded-lg flex items-center justify-center transition-transform active:scale-90 ${t.btnClass}`} title="随机文案"><Dice size={16}/></button>
-                                </div>
-                                <div className="mb-4">
-                                    <input 
-                                        type="text" 
-                                        value={dateText} 
-                                        onChange={(e) => setDateText(e.target.value)}
-                                        className={`w-full bg-transparent border-b-2 focus:outline-none text-xs font-bold py-1 transition-colors text-center
-                                            ${theme === 'fuji' ? 'border-gray-600 text-gray-300 focus:border-white' : ''}
-                                            ${theme === 'cyber' ? 'border-[#32ff00] text-[#32ff00] focus:border-[#32ff00]' : ''}
-                                            ${theme === 'cute' ? 'border-gray-200 text-gray-500 focus:border-black' : ''}
-                                        `}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-4 gap-2 mb-6">
-                                    <button onClick={generateStickers} className={`col-span-3 py-2.5 font-bold text-xs flex justify-center items-center gap-2 ${t.btnClass}`}><Sparkles size={14}/> 随机贴纸</button>
-                                    <button 
-                                        onClick={removeStickers} 
-                                        className={`col-span-1 py-2.5 flex justify-center items-center ${t.btnClass} ${activeStickerId ? 'bg-red-500 text-white border-red-500' : ''}`}
-                                        title={activeStickerId ? "删除选中贴纸" : "清空所有贴纸"}
-                                    >
-                                        {activeStickerId ? <X size={14}/> : <Trash2 size={14}/>}
-                                    </button>
-                                </div>
-                                <button onClick={handleDownload} disabled={isGenerating} className={`w-full py-4 font-black text-sm tracking-widest uppercase transition-all flex justify-center gap-2 hover:brightness-110 active:scale-95 shadow-lg ${theme === 'cyber' ? 'bg-[#32ff00] text-black border-none' : (theme === 'fuji' ? 'bg-[#d4d4d4] text-black border border-black' : 'bg-gray-900 text-white rounded-xl')}`}>
-                                    {isGenerating ? '生成中...' : <><Download size={16}/> 保存图片</>}
-                                </button>
+                                <h3 className={`text-[10px] font-bold uppercase mb-2 ${t.labelColor}`}>装饰 / DECOR</h3>
+                                <div className="flex gap-2 mb-2"><input type="text" value={customText} onChange={e=>setCustomText(e.target.value)} className={`flex-1 bg-transparent border-b-2 outline-none text-xs font-bold ${t.textColor} ${theme==='fuji'?'border-gray-600':'border-gray-300'}`}/><button onClick={generateRandomText} className={`px-3 rounded ${t.btnClass}`}><Dice size={16}/></button></div>
+                                <div className="mb-4"><input type="text" value={dateText} onChange={e=>setDateText(e.target.value)} className={`w-full bg-transparent border-b-2 outline-none text-xs font-bold text-center ${t.textColor} ${theme==='fuji'?'border-gray-600':'border-gray-300'}`}/></div>
+                                <div className="grid grid-cols-4 gap-2 mb-6"><button onClick={generateStickers} className={`col-span-3 py-2.5 font-bold text-xs flex justify-center gap-2 ${t.btnClass}`}><Sparkles size={14}/> 随机贴纸</button><button onClick={()=>setStickers([])} className={`col-span-1 py-2.5 flex justify-center ${t.btnClass}`}><Trash2 size={14}/></button></div>
+                                <button onClick={handleDownload} disabled={isGenerating} className={`w-full py-4 font-black text-sm uppercase flex justify-center gap-2 hover:opacity-90 ${theme==='cyber'?'bg-[#32ff00] text-black':'bg-black text-white rounded-xl'}`}>{isGenerating?'生成中...':<><Download size={16}/> 保存图片</>}</button>
                             </div>
                         </div>
                     </div>
 
-                    {/* MOBILE PREVIEW MODAL */}
-                    {generatedImage && (
-                        <div 
-                            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-6 backdrop-blur-sm"
-                            onClick={() => setGeneratedImage(null)}
-                        >
-                            <div className="relative max-w-full max-h-[80vh] flex flex-col items-center gap-4 animate-popIn" onClick={e => e.stopPropagation()}>
-                                <img src={generatedImage} alt="Generated" className="rounded-lg shadow-2xl max-w-full max-h-[70vh] border-2 border-white/20" />
-                                
-                                <div className="text-white text-center">
-                                    <p className="font-bold text-lg mb-1 animate-pulse">✨ 图片已生成！</p>
-                                    <p className="text-sm opacity-70">请长按上方图片保存到相册</p>
-                                </div>
-
-                                <button 
-                                    onClick={() => setGeneratedImage(null)}
-                                    className="mt-2 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-                                >
-                                    <X size={24} />
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    <input type="file" multiple ref={batchInputRef} onChange={handleBatchUpload} accept="image/*" className="hidden-input" />
-                    <input type="file" ref={singleInputRef} onChange={handleSingleUpload} accept="image/*" className="hidden-input" />
+                    {generatedImage && <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-6 backdrop-blur-sm" onClick={()=>setGeneratedImage(null)}><div className="relative flex flex-col items-center gap-4 animate-popIn"><img src={generatedImage} className="rounded shadow-2xl max-h-[70vh] border-2 border-white/20"/><div className="text-white text-center"><p className="font-bold text-lg">✨ 图片已生成！</p><p className="text-xs opacity-70">请长按上方图片保存到相册</p></div><button className="mt-2 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 text-white"><X size={20}/></button></div></div>}
+                    <input type="file" multiple ref={batchInputRef} onChange={handleBatchUpload} accept="image/*" className="hidden-input"/><input type="file" ref={singleInputRef} onChange={handleSingleUpload} accept="image/*" className="hidden-input"/>
                 </div>
             );
         };
-
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
