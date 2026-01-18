@@ -20,12 +20,15 @@
 
     <!-- Custom Fonts -->
     <style>
-        /* Added VT323 for the authentic digital date stamp look */
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;900&family=Jura:wght@500;700&family=Press+Start+2P&family=Playfair+Display:ital,wght@1,600;1,900&family=Oswald:wght@500;700&family=VT323&display=swap');
 
         /* Base Transitions */
-        body { transition: background 0.5s ease; touch-action: none; overflow-y: scroll; }
+        /* FIXED: Removed touch-action: none to allow scrolling */
+        body { transition: background 0.5s ease; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         
+        /* New utility to prevent scroll ONLY on draggable items */
+        .prevent-scroll { touch-action: none; }
+
         /* --- THEME: CUTE (Soft Pop / Y2K) --- */
         .theme-cute-bg { background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); }
         .theme-cute-panel {
@@ -512,7 +515,7 @@
                                         <div 
                                             key={idx}
                                             className={`
-                                                relative overflow-hidden group flex items-center justify-center
+                                                relative overflow-hidden group flex items-center justify-center prevent-scroll
                                                 ${images[idx].url ? '' : 'cursor-pointer hover:bg-black/10'}
                                                 ${activeSlot === idx && !isGenerating ? `ring-2 ring-offset-1 z-20 ${theme === 'cyber' ? 'ring-[#32ff00]' : 'ring-red-500'}` : ''}
                                                 filter-${theme}
@@ -557,7 +560,7 @@
                                             onMouseDown={(e) => handleStickerStart(e, s.id)}
                                             onTouchStart={(e) => handleStickerStart(e, s.id)}
                                             className={`
-                                                absolute sticker-enter text-3xl drop-shadow-md cursor-grab active:cursor-grabbing select-none hover:scale-110 transition-transform pointer-events-auto
+                                                absolute sticker-enter text-3xl drop-shadow-md cursor-grab active:cursor-grabbing select-none hover:scale-110 transition-transform pointer-events-auto prevent-scroll
                                                 ${activeStickerId === s.id && !isGenerating ? 'opacity-80' : ''}
                                             `}
                                             style={{
