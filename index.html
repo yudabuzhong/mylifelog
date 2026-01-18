@@ -444,8 +444,9 @@
                 setCustomText(presets[Math.floor(Math.random() * presets.length)]);
             };
 
-            // --- OFFSCREEN REDRAW STRATEGY (1:1 PIXEL PERFECT) ---
+            // --- ROBUST CLONE & CAPTURE WITH FIXED VIEWPORT SIMULATION ---
             const handleDownload = async () => {
+                if (!frameRef.current) return;
                 setIsGenerating(true);
                 setActiveSlot(null);
                 setActiveStickerId(null);
@@ -454,83 +455,59 @@
                 await new Promise(resolve => setTimeout(resolve, 150));
 
                 try {
-                    // Create an entirely new DOM structure for capture
-                    // This bypasses any scale/transform on the live preview
-                    const exportContainer = document.createElement('div');
-                    const width = layout === 'strip' ? 200 : 320;
-                    const height = layout === 'strip' ? 800 : 400;
+                    // 1. Create a "Sandbox" container (Ghost Element)
+                    // We place it at top: 0, left: 0 to ensure it is in the "visible" viewport area
+                    // but make it nearly transparent so user doesn't see it flicker.
+                    const ghost = document.createElement('div');
+                    ghost.style.position = 'fixed';
+                    ghost.style.top = '0';
+                    ghost.style.left = '0';
+                    ghost.style.zIndex = '9999'; 
+                    ghost.style.opacity = '0.01'; // Visible to renderer, invisible to user
+                    ghost.style.pointerEvents = 'none'; 
                     
-                    // Force styles
-                    exportContainer.style.width = width + 'px';
-                    exportContainer.style.height = height + 'px';
-                    exportContainer.style.position = 'fixed';
-                    exportContainer.style.top = '0';
-                    exportContainer.style.left = '0';
-                    exportContainer.style.zIndex = '-9999';
+                    // 2. Strict Dimensions
+                    const targetWidth = layout === 'strip' ? 200 : 320;
+                    const targetHeight = layout === 'strip' ? 800 : 400;
                     
-                    // Reconstruct HTML string (React state -> Static HTML)
-                    // Note: This is a manual reconstruction to guarantee structure
-                    const t = THEMES[theme];
-                    const gridClass = layout === 'grid' ? 'grid grid-cols-2 grid-rows-2' : 'grid grid-cols-1 grid-rows-4';
+                    ghost.style.width = `${targetWidth}px`;
+                    ghost.style.height = `${targetHeight}px`;
                     
-                    // Photos
-                    let photosHtml = '';
-                    images.forEach((img, i) => {
-                        const style = img.url 
-                            ? `background-image: url(${img.url}); transform: translate(${img.x}px, ${img.y}px) scale(${img.scale}); background-size: cover; background-position: center;`
-                            : '';
-                        const content = img.url 
-                            ? `<div style="${style}" class="w-full h-full"></div>`
-                            : `<div class="flex items-center justify-center w-full h-full text-gray-300 font-black text-xl opacity-20">${i+1}</div>`;
-                        
-                        // Apply filter classes
-                        let filterClass = `filter-${theme}`;
-                        
-                        photosHtml += `<div class="relative overflow-hidden w-full h-full flex items-center justify-center ${filterClass} ${theme === 'fuji' ? 'bg-[#1a1a1a]' : 'bg-gray-100'}">${content}</div>`;
-                    });
-
-                    // Stickers
-                    let stickersHtml = '';
-                    stickers.forEach(s => {
-                        const style = `left: ${s.x}%; top: ${s.y}%; transform: rotate(${s.rotation}deg) scale(${s.scale || 1}); position: absolute; font-size: 2rem;`;
-                        stickersHtml += `<div style="${style}">${s.content}</div>`;
-                    });
-
-                    // Decor/Text
-                    const footerHtml = `
-                        <div class="mt-4 pb-2 flex flex-col items-center justify-center z-30 relative w-full">
-                            <div class="text-center font-bold uppercase tracking-widest px-2 w-full ${t.textColor} ${t.fontClass}" style="overflow-wrap: break-word;">${customText}</div>
-                            <div class="tracking-widest mt-1 opacity-90 ${t.dateClass}">${dateText}</div>
-                        </div>
-                    `;
-
-                    // Full Template
-                    exportContainer.innerHTML = `
-                        <div class="relative p-4 overflow-hidden flex flex-col w-full h-full box-border ${t.frameClass}">
-                            <div style="position:absolute; inset:0; pointer-events:none;">${theme === 'cyber' ? '<div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#32ff00] to-transparent z-40 opacity-50"></div>' : (theme === 'cute' ? '<div class="absolute top-2 left-2 text-2xl z-40">☁️</div>' : '<div class="absolute top-2 right-2 text-[8px] text-white/50 border border-white/30 px-1 font-mono tracking-widest z-40">ISO 400</div>')}</div>
-                            <div class="w-full flex-1 gap-2 ${gridClass} ${theme === 'fuji' ? 'fuji-sprocket-grid' : ''}" style="display:grid;">
-                                ${photosHtml}
-                            </div>
-                            <div class="absolute inset-0 z-40 pointer-events-none">${stickersHtml}</div>
-                            ${footerHtml}
-                        </div>
-                    `;
-
-                    document.body.appendChild(exportContainer);
+                    // 3. Clone the Frame
+                    const originalFrame = frameRef.current;
+                    const clone = originalFrame.cloneNode(true);
                     
-                    // Wait for rendering
+                    // 4. Force Reset all flexible styles on the clone
+                    clone.style.width = '100%';
+                    clone.style.height = '100%';
+                    clone.style.transform = 'none'; 
+                    clone.style.margin = '0';
+                    clone.style.boxShadow = 'none';
+                    
+                    // 5. Append to Ghost
+                    ghost.appendChild(clone);
+                    document.body.appendChild(ghost);
+
+                    // 6. Wait for layout paint
                     await new Promise(r => setTimeout(r, 300));
 
-                    const canvas = await html2canvas(exportContainer, {
-                        width: width,
-                        height: height,
-                        scale: 3,
-                        useCORS: true,
+                    // 7. Capture with desktop-simulation settings
+                    const canvas = await html2canvas(clone, { 
+                        width: targetWidth,
+                        height: targetHeight,
+                        windowWidth: 1600, // SIMULATE DESKTOP WIDTH TO PREVENT SQUASHING
+                        scale: 4, // High Res
                         backgroundColor: null,
-                        logging: false
+                        useCORS: true,
+                        logging: false,
+                        scrollX: 0,
+                        scrollY: 0,
+                        x: 0,
+                        y: 0
                     });
-
-                    document.body.removeChild(exportContainer);
+                    
+                    // 8. Cleanup
+                    document.body.removeChild(ghost);
                     
                     const dataUrl = canvas.toDataURL('image/png');
                     
@@ -660,13 +637,14 @@
                                             ))}
                                         </div>
                                         
-                                        <div className="mt-4 pb-2 flex flex-col items-center justify-center z-30 relative pointer-events-none shrink-0">
+                                        {/* Footer Area - Optimized for spacing */}
+                                        <div className="mt-4 pb-2 flex flex-col items-center justify-center z-30 relative pointer-events-none shrink-0 w-full">
                                             <div className={`
-                                                text-center font-bold uppercase tracking-widest px-2 break-words w-full
+                                                text-center font-bold uppercase tracking-widest px-2 w-full
                                                 ${t.textColor} ${t.fontClass}
                                                 ${theme === 'cyber' ? 'text-lg tracking-tighter drop-shadow-[0_0_5px_rgba(50,255,0,0.8)]' : 'text-sm'}
                                                 ${theme === 'fuji' ? 'tracking-[0.2em] text-xs font-normal opacity-80' : ''}
-                                            `}>
+                                            `} style={{ wordBreak: 'break-word', whiteSpace: 'normal', lineHeight: '1.2' }}>
                                                 {customText}
                                             </div>
                                             <div className={`
