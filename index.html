@@ -15,7 +15,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- html2canvas for downloading -->
+    <!-- html2canvas -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <!-- Custom Fonts -->
@@ -25,15 +25,16 @@
         /* Base Settings */
         body { 
             transition: background 0.5s ease; 
-            overflow-y: auto; /* Allow vertical scroll */
+            overflow-y: auto; 
             -webkit-overflow-scrolling: touch; 
-            overscroll-behavior-y: none; /* Prevent bounce effect */
+            overscroll-behavior-y: none;
         }
         
-        /* Prevent selection during drag */
         .no-select { user-select: none; -webkit-user-select: none; }
+        .prevent-scroll { touch-action: none; }
         
-        /* --- THEME: CUTE --- */
+        /* --- THEMES --- */
+        /* CUTE */
         .theme-cute-bg { background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); }
         .theme-cute-panel {
             background: rgba(255, 255, 255, 0.65);
@@ -50,12 +51,11 @@
             font-family: 'Fredoka', sans-serif;
             box-shadow: 4px 4px 10px rgba(166, 180, 200, 0.2), -4px -4px 10px rgba(255, 255, 255, 0.8);
             transition: all 0.2s;
-            cursor: pointer;
         }
         .theme-cute-btn:active { transform: scale(0.95); }
         .theme-cute-btn:hover { color: #ff9a9e; }
         
-        /* --- THEME: FUJI --- */
+        /* FUJI */
         .theme-fuji-bg {
             background-color: #2c2c2c;
             background-image: repeating-linear-gradient(45deg, #333 0, #333 1px, transparent 0, transparent 50%);
@@ -79,7 +79,6 @@
             letter-spacing: 1px;
             box-shadow: inset 1px 1px 0 rgba(255,255,255,0.1), 2px 2px 5px rgba(0,0,0,0.5);
             text-shadow: 0 -1px 0 rgba(0,0,0,0.8);
-            cursor: pointer;
         }
         .theme-fuji-btn:active { background: #222; transform: translateY(1px); }
         .fuji-frame-bg { background-color: #111; border: 8px solid #000; }
@@ -91,7 +90,7 @@
             letter-spacing: 2px;
         }
 
-        /* --- THEME: CYBER --- */
+        /* CYBER */
         .theme-cyber-bg {
             background-color: #000;
             background-image: linear-gradient(rgba(50, 255, 0, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(50, 255, 0, 0.1) 1px, transparent 1px);
@@ -111,7 +110,6 @@
             text-transform: uppercase;
             font-weight: bold;
             transition: 0.1s;
-            cursor: pointer;
         }
         .theme-cyber-btn:hover { background: #32ff00; color: #000; box-shadow: 0 0 10px #32ff00; }
         .cyber-scanlines {
@@ -128,19 +126,16 @@
         /* Animation */
         .sticker-enter { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes popIn { 0% { transform: scale(0) rotate(0deg); opacity: 0; } 100% { transform: scale(1) rotate(var(--rot)); opacity: 1; } }
-        .printing * { animation: none !important; transition: none !important; }
-        .hidden-input { display: none; }
         
-        /* Loading Screen */
+        .hidden-input { display: none; }
         #loading { position: fixed; inset: 0; background: #f0f0f0; z-index: 9999; display: flex; justify-content: center; align-items: center; font-family: sans-serif; }
     </style>
 </head>
 <body>
-    <div id="loading">Loading Assets...</div>
+    <div id="loading">Loading...</div>
     <div id="root"></div>
 
     <script type="text/babel">
-        // Remove loading screen when React mounts
         setTimeout(() => {
             const loader = document.getElementById('loading');
             if(loader) loader.style.display = 'none';
@@ -385,7 +380,7 @@
                 const { x, y } = getClientCoords(e);
 
                 if (isDraggingImageRef.current && activeSlot !== null) {
-                    e.preventDefault(); // Prevent scroll on mobile ONLY when dragging image
+                    e.preventDefault(); 
                     const newX = x - dragStartRef.current.x;
                     const newY = y - dragStartRef.current.y;
                     setImages(prev => {
@@ -396,7 +391,7 @@
                 }
                 
                 if (isDraggingStickerRef.current && activeStickerId !== null) {
-                    e.preventDefault(); // Prevent scroll on mobile ONLY when dragging sticker
+                    e.preventDefault();
                     const { x: startX, y: startY, initialPctX, initialPctY, width, height } = dragStartRef.current;
                     const deltaX = x - startX;
                     const deltaY = y - startY;
@@ -447,48 +442,78 @@
                 setCustomText(presets[Math.floor(Math.random() * presets.length)]);
             };
 
+            // --- IMPROVED DOWNLOAD LOGIC (CLONE & CAPTURE) ---
             const handleDownload = async () => {
                 if (!frameRef.current) return;
                 setIsGenerating(true);
                 setActiveSlot(null);
                 setActiveStickerId(null);
                 
-                setTimeout(async () => {
-                    try {
-                        const canvas = await html2canvas(frameRef.current, { 
-                            scale: 3, // Safe high-res for mobile
-                            backgroundColor: null,
-                            useCORS: true,
-                            logging: false
-                        });
-                        
-                        const dataUrl = canvas.toDataURL('image/png');
+                // Allow UI to update first
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                try {
+                    // 1. Create a clone of the frame to capture
+                    // This allows us to set fixed pixel dimensions regardless of mobile screen scaling
+                    const originalFrame = frameRef.current;
+                    const clone = originalFrame.cloneNode(true);
+                    
+                    // 2. Set strict dimensions on the clone to prevent squashing/stretching
+                    // Grid: 320x400, Strip: 200x800. Matches standard ratios.
+                    const targetWidth = layout === 'strip' ? 200 : 320;
+                    const targetHeight = layout === 'strip' ? 800 : 400;
+                    
+                    clone.style.width = `${targetWidth}px`;
+                    clone.style.height = `${targetHeight}px`;
+                    clone.style.transform = 'none'; // Remove any responsive scaling
+                    clone.style.position = 'fixed';
+                    clone.style.top = '-9999px';
+                    clone.style.left = '-9999px';
+                    clone.style.zIndex = '-1';
+                    
+                    // 3. Append to body temporarily
+                    document.body.appendChild(clone);
+
+                    // 4. Capture the CLONE
+                    const canvas = await html2canvas(clone, { 
+                        scale: 3, // High quality factor
+                        backgroundColor: null,
+                        useCORS: true,
+                        logging: false
+                    });
+                    
+                    // 5. Clean up
+                    document.body.removeChild(clone);
+                    
+                    const dataUrl = canvas.toDataURL('image/png');
+                    
+                    // 6. Handle Download / Preview
+                    if (!/Mobi|Android/i.test(navigator.userAgent)) {
                         const link = document.createElement('a');
                         link.download = `lifelog_${theme}_${Date.now()}.png`;
                         link.href = dataUrl;
-                        // On desktop, auto click
-                        if (!/Mobi|Android/i.test(navigator.userAgent)) {
-                            link.click();
-                        }
-                        setGeneratedImage(dataUrl);
-                    } catch (err) {
-                        alert("生成失败，请重试");
-                        console.error(err);
-                    } finally {
-                        setIsGenerating(false);
+                        link.click();
                     }
-                }, 100);
+                    setGeneratedImage(dataUrl);
+
+                } catch (err) {
+                    alert("生成失败，请重试");
+                    console.error(err);
+                } finally {
+                    setIsGenerating(false);
+                }
             };
 
             const t = THEMES[theme];
 
-            // FORCE EXPLICIT HEIGHT TO FIX ASPECT-RATIO BUG
+            // Strict visual styles for the live preview (responsive)
+            // On mobile, we use transform: scale to fit it, but the DOM element remains true-to-size
             const frameW = layout === 'strip' ? 200 : 320;
             const frameH = layout === 'strip' ? 800 : 400;
-            const frameWrapperStyle = {
+            const frameStyle = {
                 width: `${frameW}px`,
                 height: `${frameH}px`,
-                transformOrigin: 'top center'
+                // On small screens, we might need flex scaling, handled by parent wrapper
             };
 
             return (
@@ -509,14 +534,15 @@
 
                             {/* SCALING WRAPPER */}
                             <div className="w-full flex justify-center overflow-hidden" style={{ minHeight: '400px' }}>
-                                <div className="scale-[0.8] md:scale-100 origin-top transition-transform no-select">
+                                <div className="scale-[0.75] md:scale-100 origin-top transition-transform no-select">
+                                    {/* MAIN CANVAS */}
                                     <div 
                                         ref={frameRef}
                                         className={`
                                             relative p-4 transition-all duration-500 overflow-hidden flex flex-col shrink-0
                                             ${t.frameClass}
                                         `}
-                                        style={frameWrapperStyle}
+                                        style={frameStyle}
                                     >
                                         {t.decor}
 
@@ -529,7 +555,7 @@
                                                 <div 
                                                     key={idx}
                                                     className={`
-                                                        relative overflow-hidden group flex items-center justify-center w-full h-full
+                                                        relative overflow-hidden group flex items-center justify-center prevent-scroll w-full h-full
                                                         ${images[idx].url ? '' : 'cursor-pointer hover:bg-black/10'}
                                                         ${activeSlot === idx && !isGenerating ? `ring-2 ring-offset-1 z-20 ${theme === 'cyber' ? 'ring-[#32ff00]' : 'ring-red-500'}` : ''}
                                                         filter-${theme}
@@ -574,7 +600,7 @@
                                                     onMouseDown={(e) => handleStickerStart(e, s.id)}
                                                     onTouchStart={(e) => handleStickerStart(e, s.id)}
                                                     className={`
-                                                        absolute sticker-enter text-3xl drop-shadow-md cursor-grab active:cursor-grabbing select-none hover:scale-110 transition-transform pointer-events-auto
+                                                        absolute sticker-enter text-3xl drop-shadow-md cursor-grab active:cursor-grabbing select-none hover:scale-110 transition-transform pointer-events-auto prevent-scroll
                                                         ${activeStickerId === s.id && !isGenerating ? 'opacity-80' : ''}
                                                     `}
                                                     style={{
