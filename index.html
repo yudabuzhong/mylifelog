@@ -285,7 +285,6 @@
             useEffect(() => { localStorage.setItem('lifelog_text', customText); }, [customText]);
             useEffect(() => { localStorage.setItem('lifelog_date', dateText); }, [dateText]);
 
-            // --- WHEEL ZOOM ---
             const handleWheel = (e) => {
                 if (activeSlot !== null || activeStickerId !== null) {
                     const delta = -e.deltaY * 0.001;
@@ -307,7 +306,6 @@
                 }
             };
 
-            // --- UPLOAD ---
             const handleBatchUpload = (e) => {
                 const files = Array.from(e.target.files);
                 if (files.length === 0) return;
@@ -345,7 +343,6 @@
                 setTimeout(() => singleInputRef.current.click(), 0);
             };
 
-            // --- UNIFIED DRAG LOGIC ---
             const getClientCoords = (e) => {
                 if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
                 return { x: e.clientX, y: e.clientY };
@@ -447,9 +444,8 @@
                 setCustomText(presets[Math.floor(Math.random() * presets.length)]);
             };
 
-            // --- ULTIMATE CLONE & CAPTURE STRATEGY ---
+            // --- OFFSCREEN REDRAW STRATEGY (1:1 PIXEL PERFECT) ---
             const handleDownload = async () => {
-                if (!frameRef.current) return;
                 setIsGenerating(true);
                 setActiveSlot(null);
                 setActiveStickerId(null);
@@ -458,55 +454,83 @@
                 await new Promise(resolve => setTimeout(resolve, 150));
 
                 try {
-                    // 1. Create a "Sandbox" container that forces Desktop-like rendering
-                    //    It sits on top of everything but is transparent.
-                    //    This forces the mobile browser to layout the content at full pixel width.
-                    const sandbox = document.createElement('div');
-                    sandbox.style.position = 'fixed';
-                    sandbox.style.top = '0';
-                    sandbox.style.left = '0';
-                    sandbox.style.zIndex = '9999'; 
-                    sandbox.style.opacity = '0.01'; 
-                    sandbox.style.pointerEvents = 'none'; 
+                    // Create an entirely new DOM structure for capture
+                    // This bypasses any scale/transform on the live preview
+                    const exportContainer = document.createElement('div');
+                    const width = layout === 'strip' ? 200 : 320;
+                    const height = layout === 'strip' ? 800 : 400;
                     
-                    // 2. Determine strict output dimensions
-                    const targetWidth = layout === 'strip' ? 200 : 320;
-                    const targetHeight = layout === 'strip' ? 800 : 400;
+                    // Force styles
+                    exportContainer.style.width = width + 'px';
+                    exportContainer.style.height = height + 'px';
+                    exportContainer.style.position = 'fixed';
+                    exportContainer.style.top = '0';
+                    exportContainer.style.left = '0';
+                    exportContainer.style.zIndex = '-9999';
                     
-                    sandbox.style.width = `${targetWidth}px`;
-                    sandbox.style.height = `${targetHeight}px`;
+                    // Reconstruct HTML string (React state -> Static HTML)
+                    // Note: This is a manual reconstruction to guarantee structure
+                    const t = THEMES[theme];
+                    const gridClass = layout === 'grid' ? 'grid grid-cols-2 grid-rows-2' : 'grid grid-cols-1 grid-rows-4';
                     
-                    // 3. Clone the Frame
-                    const originalFrame = frameRef.current;
-                    const clone = originalFrame.cloneNode(true);
-                    
-                    // 4. Force Reset all flexible styles on the clone
-                    clone.style.width = '100%';
-                    clone.style.height = '100%';
-                    clone.style.transform = 'none'; // Remove scale transforms
-                    clone.style.margin = '0';
-                    clone.style.boxShadow = 'none';
-                    
-                    // 5. Append to Sandbox
-                    sandbox.appendChild(clone);
-                    document.body.appendChild(sandbox);
+                    // Photos
+                    let photosHtml = '';
+                    images.forEach((img, i) => {
+                        const style = img.url 
+                            ? `background-image: url(${img.url}); transform: translate(${img.x}px, ${img.y}px) scale(${img.scale}); background-size: cover; background-position: center;`
+                            : '';
+                        const content = img.url 
+                            ? `<div style="${style}" class="w-full h-full"></div>`
+                            : `<div class="flex items-center justify-center w-full h-full text-gray-300 font-black text-xl opacity-20">${i+1}</div>`;
+                        
+                        // Apply filter classes
+                        let filterClass = `filter-${theme}`;
+                        
+                        photosHtml += `<div class="relative overflow-hidden w-full h-full flex items-center justify-center ${filterClass} ${theme === 'fuji' ? 'bg-[#1a1a1a]' : 'bg-gray-100'}">${content}</div>`;
+                    });
 
-                    // 6. Wait for layout paint
+                    // Stickers
+                    let stickersHtml = '';
+                    stickers.forEach(s => {
+                        const style = `left: ${s.x}%; top: ${s.y}%; transform: rotate(${s.rotation}deg) scale(${s.scale || 1}); position: absolute; font-size: 2rem;`;
+                        stickersHtml += `<div style="${style}">${s.content}</div>`;
+                    });
+
+                    // Decor/Text
+                    const footerHtml = `
+                        <div class="mt-4 pb-2 flex flex-col items-center justify-center z-30 relative w-full">
+                            <div class="text-center font-bold uppercase tracking-widest px-2 w-full ${t.textColor} ${t.fontClass}" style="overflow-wrap: break-word;">${customText}</div>
+                            <div class="tracking-widest mt-1 opacity-90 ${t.dateClass}">${dateText}</div>
+                        </div>
+                    `;
+
+                    // Full Template
+                    exportContainer.innerHTML = `
+                        <div class="relative p-4 overflow-hidden flex flex-col w-full h-full box-border ${t.frameClass}">
+                            <div style="position:absolute; inset:0; pointer-events:none;">${theme === 'cyber' ? '<div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#32ff00] to-transparent z-40 opacity-50"></div>' : (theme === 'cute' ? '<div class="absolute top-2 left-2 text-2xl z-40">☁️</div>' : '<div class="absolute top-2 right-2 text-[8px] text-white/50 border border-white/30 px-1 font-mono tracking-widest z-40">ISO 400</div>')}</div>
+                            <div class="w-full flex-1 gap-2 ${gridClass} ${theme === 'fuji' ? 'fuji-sprocket-grid' : ''}" style="display:grid;">
+                                ${photosHtml}
+                            </div>
+                            <div class="absolute inset-0 z-40 pointer-events-none">${stickersHtml}</div>
+                            ${footerHtml}
+                        </div>
+                    `;
+
+                    document.body.appendChild(exportContainer);
+                    
+                    // Wait for rendering
                     await new Promise(r => setTimeout(r, 300));
 
-                    // 7. Capture with explicit window dimensions to prevent mobile squashing
-                    const canvas = await html2canvas(clone, { 
-                        width: targetWidth,
-                        height: targetHeight,
-                        windowWidth: 1920, // Force desktop viewport logic
-                        scale: 3, // High Res
-                        backgroundColor: null,
+                    const canvas = await html2canvas(exportContainer, {
+                        width: width,
+                        height: height,
+                        scale: 3,
                         useCORS: true,
+                        backgroundColor: null,
                         logging: false
                     });
-                    
-                    // 8. Cleanup
-                    document.body.removeChild(sandbox);
+
+                    document.body.removeChild(exportContainer);
                     
                     const dataUrl = canvas.toDataURL('image/png');
                     
