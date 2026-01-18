@@ -24,7 +24,11 @@
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600;900&family=Jura:wght@500;700&family=Press+Start+2P&family=Playfair+Display:ital,wght@1,600;1,900&family=Oswald:wght@500;700&family=VT323&display=swap');
 
         /* Base Transitions */
-        body { transition: background 0.5s ease; touch-action: none; overflow-y: scroll; }
+        /* FIXED: Removed touch-action: none to allow scrolling on mobile */
+        body { transition: background 0.5s ease; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        
+        /* Utility to prevent scroll ONLY on draggable items */
+        .prevent-scroll { touch-action: none; }
         
         /* --- THEME: CUTE (Soft Pop / Y2K) --- */
         .theme-cute-bg { background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); }
