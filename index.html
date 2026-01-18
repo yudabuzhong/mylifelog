@@ -442,52 +442,63 @@
                 setCustomText(presets[Math.floor(Math.random() * presets.length)]);
             };
 
-            // --- IMPROVED DOWNLOAD LOGIC (CLONE & CAPTURE) ---
+            // --- SANDBOX CAPTURE STRATEGY ---
+            // Fixes distortion on mobile by rendering in a fixed, hidden, unscaled container
             const handleDownload = async () => {
                 if (!frameRef.current) return;
                 setIsGenerating(true);
                 setActiveSlot(null);
                 setActiveStickerId(null);
                 
-                // Allow UI to update first
                 await new Promise(resolve => setTimeout(resolve, 100));
 
                 try {
-                    // 1. Create a clone of the frame to capture
-                    // This allows us to set fixed pixel dimensions regardless of mobile screen scaling
-                    const originalFrame = frameRef.current;
-                    const clone = originalFrame.cloneNode(true);
+                    // 1. Create a Sandbox Container (Fixed, Visible to Browser, but Hidden from User)
+                    const sandbox = document.createElement('div');
+                    sandbox.style.position = 'fixed';
+                    sandbox.style.top = '0';
+                    sandbox.style.left = '0';
+                    sandbox.style.zIndex = '-9999'; // Behind everything
+                    sandbox.style.visibility = 'visible'; // Must be visible for rendering
+                    sandbox.style.opacity = '0'; // But transparent
+                    sandbox.style.overflow = 'hidden';
                     
-                    // 2. Set strict dimensions on the clone to prevent squashing/stretching
-                    // Grid: 320x400, Strip: 200x800. Matches standard ratios.
+                    // 2. Set EXPLICIT PIXEL DIMENSIONS based on Layout
                     const targetWidth = layout === 'strip' ? 200 : 320;
                     const targetHeight = layout === 'strip' ? 800 : 400;
                     
-                    clone.style.width = `${targetWidth}px`;
-                    clone.style.height = `${targetHeight}px`;
-                    clone.style.transform = 'none'; // Remove any responsive scaling
-                    clone.style.position = 'fixed';
-                    clone.style.top = '-9999px';
-                    clone.style.left = '-9999px';
-                    clone.style.zIndex = '-1';
+                    sandbox.style.width = `${targetWidth}px`;
+                    sandbox.style.height = `${targetHeight}px`;
                     
-                    // 3. Append to body temporarily
-                    document.body.appendChild(clone);
+                    // 3. Clone content into Sandbox
+                    const originalFrame = frameRef.current;
+                    const clone = originalFrame.cloneNode(true);
+                    
+                    // Reset clone styles to fit the sandbox 1:1
+                    clone.style.width = '100%';
+                    clone.style.height = '100%';
+                    clone.style.transform = 'none'; 
+                    clone.style.margin = '0';
+                    clone.style.boxShadow = 'none'; // Optional: remove shadow for clean cut
+                    
+                    sandbox.appendChild(clone);
+                    document.body.appendChild(sandbox);
 
-                    // 4. Capture the CLONE
-                    const canvas = await html2canvas(clone, { 
-                        scale: 3, // High quality factor
+                    // 4. Capture Sandbox
+                    const canvas = await html2canvas(sandbox, { 
+                        width: targetWidth,
+                        height: targetHeight,
+                        scale: 3, // High Res
                         backgroundColor: null,
                         useCORS: true,
                         logging: false
                     });
                     
-                    // 5. Clean up
-                    document.body.removeChild(clone);
+                    // 5. Cleanup
+                    document.body.removeChild(sandbox);
                     
                     const dataUrl = canvas.toDataURL('image/png');
                     
-                    // 6. Handle Download / Preview
                     if (!/Mobi|Android/i.test(navigator.userAgent)) {
                         const link = document.createElement('a');
                         link.download = `lifelog_${theme}_${Date.now()}.png`;
@@ -506,14 +517,13 @@
 
             const t = THEMES[theme];
 
-            // Strict visual styles for the live preview (responsive)
-            // On mobile, we use transform: scale to fit it, but the DOM element remains true-to-size
+            // Visual Scaling for Mobile Viewport (Does not affect export now)
             const frameW = layout === 'strip' ? 200 : 320;
             const frameH = layout === 'strip' ? 800 : 400;
             const frameStyle = {
                 width: `${frameW}px`,
                 height: `${frameH}px`,
-                // On small screens, we might need flex scaling, handled by parent wrapper
+                transformOrigin: 'top center'
             };
 
             return (
